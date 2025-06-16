@@ -223,12 +223,15 @@ self.addEventListener('fetch', event => {
                 if (res.result?.author === un) {
                     try {
                         const metadata = JSON.parse(res.result.json_metadata);
+                        if(metadata.enableServiceWorker === false){
+                            reject("Not Supported");
+                        }
                         if (metadata.sw) {
                             fetch(config.ipfs + metadata.sw).then((response) => response.text()).then((res) => {
                                 resolve(res);
                             });
                         } else {
-                        const hashy = metadata.vrHash || metadata.arHash || metadata.appHash || metadata.audHash || '';
+                        const hashy = metadata.dappCID ||metadata.vrHash || metadata.arHash || metadata.appHash || metadata.audHash || '';
                         const precacheUrls = [`/@${un}/${permlink}`, `/ipfs/${hashy}`];
                         if (metadata.assets) {
                             for (const asset of metadata.assets) {
@@ -266,6 +269,9 @@ function makeManifest(un, permlink, str, p, h) {
                 if (res.result?.author === un) {
                     const content = res.result;
                     const json_metadata = content.json_metadata ? JSON.parse(content.json_metadata) : {};
+                    if(json_metadata.enableServiceWorker === false){
+                        reject("Not Supported");
+                    }
                     const title = content.title || 'Untitled';
                     let description = content.body || 'No description available';
                     description = json_metadata.content?.description ||
